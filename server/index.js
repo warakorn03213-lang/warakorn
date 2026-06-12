@@ -5,15 +5,49 @@ const fs = require('fs');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const db = require('./database');
 
 const app = express();
 const PORT = 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'bluefolio-super-secret-key-12345';
+
+// Security Item 4: JWT_SECRET environment check
+const JWT_SECRET_ENV = process.env.JWT_SECRET;
+if (!JWT_SECRET_ENV) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL ERROR: JWT_SECRET environment variable is NOT set in production!');
+    process.exit(1);
+  } else {
+    console.warn('WARNING: JWT_SECRET environment variable is not set. Using fallback development key.');
+  }
+}
+const JWT_SECRET = JWT_SECRET_ENV || 'bluefolio-super-secret-key-12345';
+
+// Security Item 2: API Rate Limiter
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'มีการเชื่อมต่อมากเกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login/register requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'พยายามเข้าสู่ระบบหรือลงทะเบียนบ่อยเกินไป กรุณาลองใหม่อีกครั้งในภายหลัง (15 นาที)' }
+});
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Apply Rate Limiters
+app.use('/api/', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -29,7 +63,32 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
-const upload = multer({ storage });
+// Security Item 1: Restrict File Upload types and size
+const ALLOWED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.webm', '.pdf', '.zip', '.txt'];
+const ALLOWED_MIME_TYPES = [
+  'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+  'video/mp4', 'video/webm',
+  'application/pdf', 'application/zip', 'text/plain'
+];
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const mime = file.mimetype;
+  
+  if (ALLOWED_EXTENSIONS.includes(ext) && ALLOWED_MIME_TYPES.includes(mime)) {
+    cb(null, true);
+  } else {
+    cb(new Error('ประเภทไฟล์ไม่ได้รับอนุญาตให้ใช้ในการอัปโหลด'));
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter
+});
 
 app.use('/uploads', express.static(uploadsDir));
 
@@ -483,6 +542,22 @@ app.post('/api/users/follow', authenticateToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'ระบบขัดข้อง' });
   }
+});
+
+// Global error handling middleware (handles multer and other unhandled errors)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'ขนาดไฟล์อัปโหลดเกินขีดจำกัดสูงสุด 10MB' });
+    }
+    return res.status(400).json({ error: 'ข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message });
+  }
+  if (err.message === 'ประเภทไฟล์ไม่ได้รับอนุญาตให้ใช้ในการอัปโหลด') {
+    return res.status(400).json({ error: err.message });
+  }
+  
+  console.error('Unhandled server error:', err);
+  res.status(500).json({ error: 'เกิดข้อผิดพลาดภายในระบบเซิร์ฟเวอร์' });
 });
 
 app.listen(PORT, () => {
