@@ -85,7 +85,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 500 * 1024 * 1024 // 500MB limit for 10-minute 1080p videos
   },
   fileFilter
 });
@@ -548,7 +548,7 @@ app.post('/api/users/follow', authenticateToken, async (req, res) => {
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'ขนาดไฟล์อัปโหลดเกินขีดจำกัดสูงสุด 10MB' });
+      return res.status(400).json({ error: 'ขนาดไฟล์อัปโหลดเกินขีดจำกัดสูงสุด 500MB' });
     }
     return res.status(400).json({ error: 'ข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message });
   }
