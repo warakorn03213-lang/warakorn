@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const dbPath = path.join(__dirname, 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
+db.run('PRAGMA foreign_keys = ON');
+
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -15,7 +17,8 @@ db.serialize(() => {
       role TEXT NOT NULL DEFAULT 'creator',
       avatar TEXT,
       bio TEXT,
-      socialLink TEXT
+      socialLink TEXT,
+      isSuspended INTEGER DEFAULT 0
     )
   `);
 

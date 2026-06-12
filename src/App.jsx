@@ -99,14 +99,10 @@ export default function App() {
     return safeJsonParse(saved, false);
   });
 
-  const [suspendedEmails, setSuspendedEmails] = useState(() => {
-    const saved = localStorage.getItem('bluefolio_suspended_emails');
-    return safeJsonParse(saved, []);
-  });
-
-  useEffect(() => {
-    localStorage.setItem('bluefolio_suspended_emails', JSON.stringify(suspendedEmails));
-  }, [suspendedEmails]);
+  const isUserSuspended = (email) => {
+    const found = users.find(u => u.email === email);
+    return found ? !!found.isSuspended : false;
+  };
 
   useEffect(() => {
     if (user) {
@@ -294,7 +290,7 @@ export default function App() {
   };
 
   const handleSaveItem = async (savedItem, selectedFile) => {
-    if (user && suspendedEmails.includes(user.email)) {
+    if (user && isUserSuspended(user.email)) {
       alert('บัญชีของคุณถูกระงับสิทธิ์การโพสต์ผลงานชั่วคราว ไม่สามารถดำเนินการนี้ได้');
       return;
     }
@@ -444,7 +440,7 @@ export default function App() {
     }
   };
 
-  const handleToggleSuspendUser = (email) => {
+  const handleToggleSuspendUser = async (email) => {
     if (!user || user.role !== 'superadmin') {
       alert('เฉพาะผู้ดูแลระบบระดับสูง (Super Admin) เท่านั้นที่สามารถระงับบัญชีผู้ใช้ได้');
       return;
@@ -459,9 +455,29 @@ export default function App() {
       return;
     }
     
-    setSuspendedEmails(prev => 
-      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
-    );
+    const newSuspendedState = !target?.isSuspended;
+    try {
+      const token = localStorage.getItem('bluefolio_token');
+      const response = await fetch(`/api/users/${email}/suspend`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({ isSuspended: newSuspendedState })
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'ไม่สามารถดำเนินการได้');
+        return;
+      }
+      setUsers(prevUsers => prevUsers.map(u => 
+        u.email === email ? { ...u, isSuspended: newSuspendedState } : u
+      ));
+    } catch (error) {
+      console.error('Error toggling user suspension:', error);
+      alert('ระบบขัดข้อง');
+    }
   };
 
   const handleDeleteUser = async (email) => {
@@ -497,7 +513,7 @@ export default function App() {
 
         setUsers(prevUsers => prevUsers.filter(u => u.email !== email));
         setPortfolio(prevPortfolio => prevPortfolio.filter(item => item.authorEmail !== email));
-        setSuspendedEmails(prevSuspended => prevSuspended.filter(e => e !== email));
+
       } catch (error) {
         console.error('Error deleting user:', error);
         alert('ระบบขัดข้อง');
@@ -826,8 +842,8 @@ export default function App() {
   if (showAuth) {
     return (
       <AuthCard
-        onLogin={(creds) => {
-          const success = handleLogin(creds);
+        onLogin={async (creds) => {
+          const success = await handleLogin(creds);
           if (success) {
             setShowAuth(false);
             window.location.hash = '#workspace';
@@ -966,7 +982,7 @@ export default function App() {
                             );
                           })
                           .map((u) => {
-                            const isSuspended = suspendedEmails.includes(u.email);
+                            const isSuspended = isUserSuspended(u.email);
                             const userWorksCount = portfolio.filter((item) => item.authorEmail === u.email).length;
                             return (
                               <tr key={u.email} className="hover:bg-slate-50/30 dark:hover:bg-slate-950/10 transition">
@@ -1333,16 +1349,16 @@ export default function App() {
                         </button>
                         <button
                           onClick={() => {
-                            if (suspendedEmails.includes(user.email)) {
+                            if (isUserSuspended(user.email)) {
                               alert('บัญชีของคุณถูกระงับสิทธิ์การโพสต์ผลงานชั่วคราว กรุณาติดต่อผู้ดูแลระบบ');
                               return;
                             }
                             setEditingItem(null);
                             setIsModalOpen(true);
                           }}
-                          disabled={suspendedEmails.includes(user.email)}
+                          disabled={isUserSuspended(user.email)}
                           className={`flex items-center gap-1.5 px-4 py-2.5 font-bold rounded-xl text-xs transition cursor-pointer shadow-sm active:scale-95 animate-[scaleIn_0.2s_ease-out] ${
-                            suspendedEmails.includes(user.email)
+                            isUserSuspended(user.email)
                               ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-dashed border-slate-200 dark:border-slate-800'
                               : 'bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 shadow-slate-900/10'
                           }`}
@@ -1448,7 +1464,7 @@ export default function App() {
               </div>
             ) : null}
 
-            {activeTab === 'workspace' && user && suspendedEmails.includes(user.email) && (
+            {activeTab === 'workspace' && user && isUserSuspended(user.email) && (
               <div className="mb-8 p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-2xl flex items-start gap-3 text-xs md:text-sm text-rose-600 dark:text-rose-500 animate-scale-in">
                 <Info size={16} className="shrink-0 mt-0.5" />
                 <div>
@@ -1615,7 +1631,7 @@ export default function App() {
               {filteredPortfolio.length === 0 ? (
                 <div className="border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl py-16 text-center">
                   <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500">ไม่พบชิ้นงานที่สอดคล้องกับการค้นหาของคุณในฟีดนี้</p>
-                  {activeTab === 'workspace' && user && !suspendedEmails.includes(user.email) && (
+                  {activeTab === 'workspace' && user && !isUserSuspended(user.email) && (
                     <button
                       onClick={() => {
                         setEditingItem(null);
@@ -1642,7 +1658,7 @@ export default function App() {
                       onCardClick={() => { window.location.hash = `#project/${item.id}`; }}
                       onAuthorClick={(email) => { window.location.hash = `#creator/${encodeURIComponent(email)}`; }}
                       activeTab={activeTab}
-                      isAuthorSuspended={suspendedEmails.includes(item.authorEmail)}
+                      isAuthorSuspended={isUserSuspended(item.authorEmail)}
                       authorId={getUserById(item.authorEmail)}
                       onLikeToggle={handleToggleLike}
                     />

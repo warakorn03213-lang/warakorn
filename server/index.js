@@ -94,10 +94,10 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'อีเมลนี้เคยลงทะเบียนไว้แล้ว' });
     }
 
-    // Generate consecutive USRxx serial ID based on total creator users
-    const creators = await dbQuery("SELECT COUNT(*) as count FROM users WHERE role != 'admin' AND role != 'superadmin'");
-    const creatorCount = creators[0].count + 1;
-    const userId = `USR${String(creatorCount).padStart(2, '0')}`;
+    // Generate consecutive USRxx serial ID based on highest existing ID
+    const maxRow = await dbGet("SELECT userId FROM users WHERE userId LIKE 'USR%' ORDER BY userId DESC LIMIT 1");
+    const nextNum = maxRow ? parseInt(maxRow.userId.replace('USR', ''), 10) + 1 : 1;
+    const userId = `USR${String(nextNum).padStart(2, '0')}`;
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
@@ -162,9 +162,9 @@ app.post('/api/auth/create-admin', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'อีเมลนี้ถูกใช้งานในระบบแล้ว' });
     }
 
-    const admins = await dbQuery("SELECT COUNT(*) as count FROM users WHERE role = 'admin' OR role = 'superadmin'");
-    const adminCount = admins[0].count + 1;
-    const userId = `ADM${String(adminCount).padStart(2, '0')}`;
+    const maxRow = await dbGet("SELECT userId FROM users WHERE userId LIKE 'ADM%' ORDER BY userId DESC LIMIT 1");
+    const nextNum = maxRow ? parseInt(maxRow.userId.replace('ADM', ''), 10) + 1 : 1;
+    const userId = `ADM${String(nextNum).padStart(2, '0')}`;
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
@@ -184,8 +184,9 @@ app.post('/api/auth/create-admin', authenticateToken, async (req, res) => {
 
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await dbQuery('SELECT email, name, userId, role, avatar, bio, socialLink FROM users');
-    res.json(users);
+    const users = await dbQuery('SELECT email, name, userId, role, avatar, bio, socialLink, isSuspended FROM users');
+    const formatted = users.map(u => ({ ...u, isSuspended: !!u.isSuspended }));
+    res.json(formatted);
   } catch (err) {
     res.status(500).json({ error: 'ระบบขัดข้อง' });
   }
@@ -228,6 +229,20 @@ app.delete('/api/users/:email', authenticateToken, async (req, res) => {
   try {
     // SQLite foreign keys are enabled (cascade delete will handle related projects/comments/likes)
     await dbRun('DELETE FROM users WHERE email = ?', [email]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'ระบบขัดข้อง' });
+  }
+});
+
+app.put('/api/users/:email/suspend', authenticateToken, async (req, res) => {
+  const { email } = req.params;
+  const { isSuspended } = req.body;
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'เฉพาะผู้ดูแลระบบระดับสูง (Super Admin) เท่านั้นที่สามารถระงับบัญชีผู้ใช้ได้' });
+  }
+  try {
+    await dbRun('UPDATE users SET isSuspended = ? WHERE email = ?', [isSuspended ? 1 : 0, email]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'ระบบขัดข้อง' });
