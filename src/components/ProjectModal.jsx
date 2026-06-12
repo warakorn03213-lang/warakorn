@@ -13,6 +13,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
   const [error, setError] = useState('');
 
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (editingItem) {
@@ -38,6 +39,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
     }
     setSelectedFile(null);
     setError('');
+    setIsSubmitting(false);
   }, [editingItem, isOpen]);
 
   const handleFileChange = (e) => {
@@ -61,7 +63,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -106,8 +108,17 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
       savedData.id = editingItem.id;
     }
 
-    onSave(savedData, selectedFile);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const success = await onSave(savedData, selectedFile);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -306,15 +317,17 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-sm font-bold active:scale-[0.98] transition cursor-pointer shadow-sm"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-sm font-bold active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              บันทึก
+              {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
 

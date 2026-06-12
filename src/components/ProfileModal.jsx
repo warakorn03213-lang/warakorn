@@ -9,6 +9,7 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
   const [error, setError] = useState('');
 
   const [avatarFile, setAvatarFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Crop Flow States
   const [cropSource, setCropSource] = useState('');
@@ -35,6 +36,7 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
     setZoom(1);
     setOffset({ x: 0, y: 0 });
     setImageAspect('landscape');
+    setIsSubmitting(false);
   }, [currentUser, isOpen]);
 
   const handleAvatarChange = (e) => {
@@ -137,7 +139,7 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedName = name.trim();
     
@@ -146,13 +148,22 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
       return;
     }
 
-    onSave({ 
-      name: trimmedName, 
-      avatar, 
-      bio: bio.trim(), 
-      socialLink: socialLink.trim() 
-    }, avatarFile);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const success = await onSave({ 
+        name: trimmedName, 
+        avatar, 
+        bio: bio.trim(), 
+        socialLink: socialLink.trim() 
+      }, avatarFile);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -252,15 +263,17 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-900 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-sm font-bold active:scale-[0.98] transition cursor-pointer shadow-sm"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-900 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-sm font-bold active:scale-[0.98] transition cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              บันทึก
+              {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
 

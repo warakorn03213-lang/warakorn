@@ -292,7 +292,7 @@ export default function App() {
   const handleSaveItem = async (savedItem, selectedFile) => {
     if (user && isUserSuspended(user.email)) {
       alert('บัญชีของคุณถูกระงับสิทธิ์การโพสต์ผลงานชั่วคราว ไม่สามารถดำเนินการนี้ได้');
-      return;
+      return false;
     }
 
     try {
@@ -338,7 +338,7 @@ export default function App() {
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || 'ไม่สามารถบันทึกผลงานได้');
-        return;
+        return false;
       }
 
       const projectsResponse = await fetch('/api/projects');
@@ -352,9 +352,11 @@ export default function App() {
       }
       
       setEditingItem(null);
+      return true;
     } catch (error) {
       console.error('Error saving project:', error);
       alert('ระบบขัดข้อง ไม่สามารถดำเนินการได้');
+      return false;
     }
   };
 
@@ -388,7 +390,7 @@ export default function App() {
   };
 
   const handleSaveProfile = async ({ name, avatar, bio, socialLink }, avatarFile) => {
-    if (!user) return;
+    if (!user) return false;
     try {
       const formData = new FormData();
       formData.append('email', user.email);
@@ -411,7 +413,7 @@ export default function App() {
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || 'ไม่สามารถบันทึกข้อมูลโปรไฟล์ได้');
-        return;
+        return false;
       }
 
       const updatedUserProfile = await response.json();
@@ -434,9 +436,11 @@ export default function App() {
         }));
         setPortfolio(formattedProjects);
       }
+      return true;
     } catch (error) {
       console.error('Error saving profile:', error);
       alert('ระบบขัดข้อง: ' + error.message);
+      return false;
     }
   };
 
@@ -535,14 +539,16 @@ export default function App() {
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || 'ไม่สามารถสร้างผู้ดูแลระบบได้');
-        return;
+        return false;
       }
       const newAdmin = await response.json();
       setUsers(prevUsers => [...prevUsers, newAdmin]);
       alert(`สร้างบัญชีผู้ดูแลระบบ ${newAdmin.name} (@${newAdmin.userId}) สำเร็จแล้ว!`);
+      return true;
     } catch (error) {
       console.error('Error creating admin:', error);
       alert('ระบบขัดข้อง');
+      return false;
     }
   };
 

@@ -7,18 +7,21 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       setName('');
       setEmail('');
       setPassword('');
       setError('');
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -48,12 +51,21 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
       return;
     }
 
-    onSave({
-      name: trimmedName,
-      email: trimmedEmail,
-      password: trimmedPassword,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const success = await onSave({
+        name: trimmedName,
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,15 +151,17 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition duration-150 cursor-pointer active:scale-95"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition duration-150 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition duration-150 cursor-pointer active:scale-95 shadow-sm shadow-amber-500/10"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition duration-150 cursor-pointer active:scale-95 shadow-sm shadow-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              บันทึกข้อมูล
+              {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
             </button>
           </div>
         </form>
