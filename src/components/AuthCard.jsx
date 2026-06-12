@@ -2,55 +2,59 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function AuthCard({ onLogin, onRegister, onCancel }) {
-  const [mode, setMode] = useState('login'); // login, register
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!email.trim() || !password.trim()) {
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedName = name.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
       setError('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
-    if (password.length < 6) {
+    if (trimmedPassword.length < 6) {
       setError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
       return;
     }
 
     if (mode === 'register') {
-      if (!name.trim()) {
+      if (!trimmedName) {
         setError('กรุณากรอกชื่อ-นามสกุล');
         return;
       }
-      if (password !== confirmPassword) {
+      if (trimmedPassword !== confirmPassword) {
         setError('รหัสผ่านไม่ตรงกัน');
         return;
       }
       
-      const success = onRegister({ email, password, name });
-      if (success) {
+      const isRegistered = await onRegister({ email: trimmedEmail, password: trimmedPassword, name: trimmedName });
+      if (isRegistered) {
         setMode('login');
         setError('');
         alert('สมัครสมาชิกสำเร็จ! กรุณาลงชื่อเข้าใช้งาน');
       } else {
-        setError('อีเมลนี้เคยลงทะเบียนไว้แล้ว');
+        setError('อีเมลนี้เคยลงทะเบียนไว้แล้ว หรือข้อมูลไม่ถูกต้อง');
       }
     } else {
-      const success = onLogin({ email, password });
-      if (!success) {
+      const isLoginSuccess = await onLogin({ email: trimmedEmail, password: trimmedPassword });
+      if (!isLoginSuccess) {
         setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
     }
   };
 
   const toggleMode = () => {
-    setMode(mode === 'login' ? 'register' : 'login');
+    setMode(prev => prev === 'login' ? 'register' : 'login');
     setError('');
     setEmail('');
     setPassword('');
@@ -61,9 +65,6 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/20 flex flex-col justify-center py-12 px-6 relative transition-colors duration-200">
       
-
-
-      {/* Centered Login Card */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md bg-white dark:bg-slate-900 p-10 rounded-[32px] border border-slate-100/80 dark:border-slate-800/80 shadow-xl shadow-slate-100/40 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
         
         <div className="flex items-center justify-center gap-1.5 mb-6">
@@ -76,7 +77,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
         </h2>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs md:text-sm text-rose-600 dark:text-rose-450 animate-[fadeIn_0.2s_ease-out]">
+          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs md:text-sm text-rose-600 dark:text-rose-400 animate-[fadeIn_0.2s_ease-out]">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -99,7 +100,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="ป้อนชื่อและนามสกุล"
-                  className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-550 transition-colors"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                 />
               </div>
             </div>
@@ -119,7 +120,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-550 transition-colors"
+                className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
               />
             </div>
           </div>
@@ -138,7 +139,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="รหัสผ่าน 6 ตัวอักษรขึ้นไป"
-                className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-550 transition-colors"
+                className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
               />
             </div>
           </div>
@@ -158,7 +159,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="ป้อนรหัสผ่านอีกครั้ง"
-                  className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-550 transition-colors"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:border-slate-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                 />
               </div>
             </div>
@@ -176,7 +177,7 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
         </form>
 
         {mode === 'login' && (
-          <div className="mt-5 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 rounded-xl text-xs text-slate-500 dark:text-slate-450 text-center animate-[fadeInUp_0.4s_ease-out] space-y-1">
+          <div className="mt-5 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 text-center animate-[fadeInUp_0.4s_ease-out] space-y-1">
             <div>
               <span className="font-bold text-red-600 dark:text-red-400">Super Admin:</span>{' '}
               <span className="font-semibold text-slate-700 dark:text-slate-300">admin@admin.com</span>
