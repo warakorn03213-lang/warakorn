@@ -4,7 +4,7 @@ import { Compass, Briefcase, Eye, EyeOff, LogOut, Settings, User, Sun, Moon, Log
 export default function Navbar({ 
   user, 
   onLogout, 
-  isPublicView, 
+  isPublicView,
   setIsPublicView, 
   onLoginClick,
   activeTab,
