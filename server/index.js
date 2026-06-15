@@ -6,7 +6,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const { dbQuery, dbGet, dbRun, isPg } = require('./database');
+const { dbQuery, dbGet, dbRun, isPg, dbInitPromise } = require('./database');
 const { createClient } = require('@supabase/supabase-js');
 
 let supabase = null;
@@ -53,6 +53,17 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Ensure database is fully initialized before handling API requests (fixes Vercel Serverless race conditions)
+app.use(async (req, res, next) => {
+  try {
+    await dbInitPromise;
+    next();
+  } catch (err) {
+    console.error('Database initialization failed:', err);
+    res.status(500).json({ error: 'ฐานข้อมูลยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้งในภายหลัง' });
+  }
+});
 
 // Apply Rate Limiters
 app.use('/api/', apiLimiter);

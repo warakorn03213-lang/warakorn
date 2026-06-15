@@ -219,11 +219,12 @@ const initDatabase = async () => {
   }
 };
 
-initDatabase();
+const dbInitPromise = initDatabase();
 
 module.exports = {
   dbQuery,
   dbGet,
   dbRun,
-  isPg
+  isPg,
+  dbInitPromise
 };
