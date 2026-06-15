@@ -28,3 +28,12 @@ server/node_modules
 server/database.sqlite
 server/uploads
 *.sqlite
+
+# Environment variables
+.env
+.env.*
+server/.env
+server/.env.*
+
+# Sensitive credentials
+admin_credentials.txt

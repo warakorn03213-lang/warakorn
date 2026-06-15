@@ -41,7 +41,6 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
       if (isRegistered) {
         setMode('login');
         setError('');
-        alert('สมัครสมาชิกสำเร็จ! กรุณาลงชื่อเข้าใช้งาน');
       } else {
         setError('อีเมลนี้เคยลงทะเบียนไว้แล้ว หรือข้อมูลไม่ถูกต้อง');
       }
@@ -175,22 +174,6 @@ export default function AuthCard({ onLogin, onRegister, onCancel }) {
             </button>
           </div>
         </form>
-
-        {mode === 'login' && (
-          <div className="mt-5 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 text-center animate-[fadeInUp_0.4s_ease-out] space-y-1">
-            <div>
-              <span className="font-bold text-red-600 dark:text-red-400">Super Admin:</span>{' '}
-              <span className="font-semibold text-slate-700 dark:text-slate-300">admin@admin.com</span>
-            </div>
-            <div>
-              <span className="font-bold text-amber-600 dark:text-amber-400">Admin:</span>{' '}
-              <span className="font-semibold text-slate-700 dark:text-slate-300">admin2@admin.com</span>
-            </div>
-            <div className="text-[10px] text-slate-400 border-t border-slate-200/50 dark:border-slate-800/50 pt-1 mt-1">
-              รหัสผ่านสำหรับทั้งสองบัญชี: <span className="font-semibold text-slate-700 dark:text-slate-300">admin123</span>
-            </div>
-          </div>
-        )}
 
         <div className="mt-5 text-center">
           <button

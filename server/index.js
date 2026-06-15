@@ -6,7 +6,13 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const db = require('./database');
+const { dbQuery, dbGet, dbRun, isPg } = require('./database');
+const { createClient } = require('@supabase/supabase-js');
+
+let supabase = null;
+if (isPg && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const app = express();
 const PORT = 5000;
@@ -40,7 +46,11 @@ const authLimiter = rateLimit({
   message: { error: 'พยายามเข้าสู่ระบบหรือลงทะเบียนบ่อยเกินไป กรุณาลองใหม่อีกครั้งในภายหลัง (15 นาที)' }
 });
 
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -82,43 +92,101 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 500 * 1024 * 1024 // 500MB limit for 10-minute 1080p videos
-  },
-  fileFilter
-});
+// Multer dual storage setup split by upload type (Avatar vs Project)
+let uploadAvatar;
+let uploadProject;
+
+if (isPg) {
+  uploadAvatar = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit for profile avatar
+    },
+    fileFilter
+  });
+
+  uploadProject = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024 // 100MB limit for project files/videos
+    },
+    fileFilter
+  });
+} else {
+  uploadAvatar = multer({
+    storage,
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter
+  });
+
+  uploadProject = multer({
+    storage,
+    limits: {
+      fileSize: 100 * 1024 * 1024 // 100MB limit
+    },
+    fileFilter
+  });
+}
+
+const uploadToCloudOrLocal = async (file, fallbackFilename) => {
+  if (isPg && supabase) {
+    const fileExt = path.extname(file.originalname);
+    const fileNameKey = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+    const { data, error } = await supabase.storage
+      .from('portfolio-uploads')
+      .upload(fileNameKey, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error('ไม่สามารถอัปโหลดไฟล์ไปยังระบบคลาวด์ได้');
+    }
+    
+    const { data: publicUrlData } = supabase.storage
+      .from('portfolio-uploads')
+      .getPublicUrl(fileNameKey);
+      
+    return publicUrlData.publicUrl;
+  } else {
+    return `/uploads/${fallbackFilename}`;
+  }
+};
+
+const deleteUploadedFile = async (fileUrl) => {
+  if (!fileUrl) return;
+  try {
+    if (isPg && supabase && fileUrl.includes('supabase.co')) {
+      const parts = fileUrl.split('portfolio-uploads/');
+      if (parts.length > 1) {
+        const filenameKey = parts[1];
+        const { error } = await supabase.storage
+          .from('portfolio-uploads')
+          .remove([filenameKey]);
+        if (error) {
+          console.error('Failed to delete file from Supabase storage:', error);
+        } else {
+          console.log(`Deleted file from Supabase storage: ${filenameKey}`);
+        }
+      }
+    } else if (fileUrl.startsWith('/uploads/')) {
+      const filename = fileUrl.replace('/uploads/', '');
+      const filePath = path.join(uploadsDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted local file: ${filename}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error in deleteUploadedFile:', err);
+  }
+};
 
 app.use('/uploads', express.static(uploadsDir));
-
-// Database promise wrappers for cleaner async/await code flow
-const dbQuery = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-};
-
-const dbGet = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-};
-
-const dbRun = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve({ id: this.lastID, changes: this.changes });
-    });
-  });
-};
 
 // --- AUTHENTICATION MIDDLEWARE ---
 
@@ -160,12 +228,13 @@ app.post('/api/auth/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
+    const trimmedEmail = email.trim();
     await dbRun(
       'INSERT INTO users (email, password, name, userId, role, avatar) VALUES (?, ?, ?, ?, ?, ?)',
-      [email.trim(), hashedPassword, name.trim(), userId, 'creator', '']
+      [trimmedEmail, hashedPassword, name.trim(), userId, 'creator', '']
     );
 
-    const newUser = await dbGet('SELECT email, name, userId, role, avatar, bio, socialLink FROM users WHERE email = ?', [email]);
+    const newUser = await dbGet('SELECT email, name, userId, role, avatar, bio, socialLink FROM users WHERE email = ?', [trimmedEmail]);
     res.json({ ...newUser, following: [] });
   } catch (err) {
     res.status(500).json({ error: 'ระบบทำงานขัดข้อง กรุณาลองใหม่อีกครั้ง' });
@@ -189,7 +258,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
     }
 
-    const follows = await dbQuery('SELECT followedEmail FROM follows WHERE followerEmail = ?', [email]);
+    const follows = await dbQuery('SELECT followedEmail FROM follows WHERE followerEmail = ?', [user.email]);
     const following = follows.map(f => f.followedEmail);
 
     const token = jwt.sign(
@@ -241,7 +310,21 @@ app.post('/api/auth/create-admin', authenticateToken, async (req, res) => {
 
 // --- USERS MANAGEMENT ---
 
-app.get('/api/users', async (req, res) => {
+// Public endpoint: returns limited user data for explore feed (no role, no isSuspended)
+app.get('/api/users/public', async (req, res) => {
+  try {
+    const users = await dbQuery('SELECT email, name, avatar, userId, bio, socialLink FROM users');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'ระบบขัดข้อง' });
+  }
+});
+
+// Protected endpoint: returns full user data, restricted to admin/superadmin only
+app.get('/api/users', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'superadmin' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถดูข้อมูลผู้ใช้ทั้งหมดได้' });
+  }
   try {
     const users = await dbQuery('SELECT email, name, userId, role, avatar, bio, socialLink, isSuspended FROM users');
     const formatted = users.map(u => ({ ...u, isSuspended: !!u.isSuspended }));
@@ -251,7 +334,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-app.put('/api/users/profile', authenticateToken, upload.single('avatarFile'), async (req, res) => {
+app.put('/api/users/profile', authenticateToken, uploadAvatar.single('avatarFile'), async (req, res) => {
   const { email, name, bio, socialLink, avatarUrl } = req.body;
   if (req.user.email !== email && req.user.role !== 'superadmin') {
     return res.status(403).json({ error: 'คุณไม่มีสิทธิ์อัปเดตข้อมูลของบุคคลอื่น' });
@@ -260,7 +343,11 @@ app.put('/api/users/profile', authenticateToken, upload.single('avatarFile'), as
   try {
     let finalAvatar = avatarUrl || '';
     if (req.file) {
-      finalAvatar = `/uploads/${req.file.filename}`;
+      const currentUserInfo = await dbGet('SELECT avatar FROM users WHERE email = ?', [email]);
+      if (currentUserInfo && currentUserInfo.avatar && currentUserInfo.avatar !== avatarUrl) {
+        await deleteUploadedFile(currentUserInfo.avatar);
+      }
+      finalAvatar = await uploadToCloudOrLocal(req.file, req.file.filename);
     }
 
     await dbRun(
@@ -278,15 +365,31 @@ app.put('/api/users/profile', authenticateToken, upload.single('avatarFile'), as
 
 app.delete('/api/users/:email', authenticateToken, async (req, res) => {
   const { email } = req.params;
-  if (req.user.role !== 'superadmin') {
-    return res.status(403).json({ error: 'เฉพาะผู้ดูแลระบบระดับสูง (Super Admin) เท่านั้นที่สามารถลบบัญชีผู้ใช้ได้' });
+  const isSelfDelete = req.user.email === email;
+
+  // ผู้ดูแลระบบระดับสูง (Super Admin) ไม่สามารถลบบัญชีของตัวเองได้
+  if (isSelfDelete && req.user.role === 'superadmin') {
+    return res.status(400).json({ error: 'ผู้ดูแลระบบระดับสูง (Super Admin) ไม่สามารถลบบัญชีของตัวเองได้' });
   }
-  if (req.user.email === email) {
-    return res.status(400).json({ error: 'คุณไม่สามารถลบบัญชีของตัวเองได้' });
+
+  // อนุญาตให้ผู้ใช้ลบบัญชีของตัวเอง หรือ superadmin ลบบัญชีของผู้อื่น
+  if (!isSelfDelete && req.user.role !== 'superadmin') {
+    return res.status(403).json({ error: 'เฉพาะผู้ดูแลระบบระดับสูง (Super Admin) เท่านั้นที่สามารถลบบัญชีผู้ใช้อื่นได้' });
   }
 
   try {
-    // SQLite foreign keys are enabled (cascade delete will handle related projects/comments/likes)
+    const userInfo = await dbGet('SELECT avatar FROM users WHERE email = ?', [email]);
+    const userProjects = await dbQuery('SELECT fileUrl FROM projects WHERE authorEmail = ?', [email]);
+
+    if (userInfo && userInfo.avatar) {
+      await deleteUploadedFile(userInfo.avatar);
+    }
+    for (const project of userProjects) {
+      if (project.fileUrl) {
+        await deleteUploadedFile(project.fileUrl);
+      }
+    }
+
     await dbRun('DELETE FROM users WHERE email = ?', [email]);
     res.json({ success: true });
   } catch (err) {
@@ -353,7 +456,7 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 
-app.post('/api/projects', authenticateToken, upload.single('mediaFile'), async (req, res) => {
+app.post('/api/projects', authenticateToken, uploadProject.single('mediaFile'), async (req, res) => {
   const { title, description, type, tags, authorEmail, fileUrl: externalUrl } = req.body;
   if (req.user.email !== authorEmail) {
     return res.status(403).json({ error: 'ไม่สามารถเพิ่มผลงานในนามของผู้อื่นได้' });
@@ -365,7 +468,7 @@ app.post('/api/projects', authenticateToken, upload.single('mediaFile'), async (
     let fileSize = '';
 
     if (req.file) {
-      finalFileUrl = `/uploads/${req.file.filename}`;
+      finalFileUrl = await uploadToCloudOrLocal(req.file, req.file.filename);
       fileName = req.file.originalname;
       const sizeInMB = (req.file.size / (1024 * 1024)).toFixed(2);
       fileSize = `${sizeInMB} MB`;
@@ -424,10 +527,23 @@ app.put('/api/projects/:id', authenticateToken, async (req, res) => {
 
 app.delete('/api/projects/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  if (req.user.role !== 'superadmin' && req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถลบผลงานได้' });
-  }
+
   try {
+    // ดึงข้อมูลผลงานก่อนเพื่อตรวจสอบความเป็นเจ้าของ
+    const project = await dbGet('SELECT authorEmail, fileUrl FROM projects WHERE id = ?', [id]);
+    if (!project) {
+      return res.status(404).json({ error: 'ไม่พบผลงานนี้ในระบบ' });
+    }
+
+    // อนุญาตให้เจ้าของผลงาน, admin, หรือ superadmin ลบผลงานได้
+    if (req.user.email !== project.authorEmail && req.user.role !== 'superadmin' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'ไม่มีสิทธิ์ลบผลงานของผู้อื่น' });
+    }
+
+    if (project.fileUrl) {
+      await deleteUploadedFile(project.fileUrl);
+    }
+
     await dbRun('DELETE FROM projects WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (err) {
@@ -548,7 +664,7 @@ app.post('/api/users/follow', authenticateToken, async (req, res) => {
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'ขนาดไฟล์อัปโหลดเกินขีดจำกัดสูงสุด 500MB' });
+      return res.status(400).json({ error: 'ขนาดไฟล์อัปโหลดเกินขีดจำกัดสูงสุดที่ระบบอนุญาต' });
     }
     return res.status(400).json({ error: 'ข้อผิดพลาดในการอัปโหลดไฟล์: ' + err.message });
   }

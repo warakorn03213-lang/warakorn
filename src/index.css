@@ -61,6 +61,27 @@
 .stagger-4 { animation-delay: 200ms; }
 .stagger-5 { animation-delay: 250ms; }
 
+/* Toast Animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes shrinkWidth {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
 /* Minimalist scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

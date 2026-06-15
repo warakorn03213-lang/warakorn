@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Camera, AlertCircle, FileText, Globe, ZoomIn, ZoomOut, Move } from 'lucide-react';
 
-export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
+export default function ProfileModal({ isOpen, onClose, onSave, currentUser, onDeleteAccount }) {
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('');
   const [bio, setBio] = useState('');
@@ -276,6 +276,23 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser }) {
               {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
+
+          {currentUser && currentUser.role !== 'superadmin' && (
+            <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onDeleteAccount) {
+                    onDeleteAccount(currentUser.email);
+                  }
+                }}
+                className="text-xs font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline cursor-pointer active:scale-95 transition-all"
+              >
+                ลบบัญชีผู้ใช้ของคุณอย่างถาวร
+              </button>
+            </div>
+          )}
 
         </form>
       </div>

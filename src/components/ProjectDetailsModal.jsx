@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { X, Calendar, AlertCircle, RotateCcw, Heart, Globe } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, Calendar, AlertCircle, RotateCcw, Heart, Globe, Bookmark } from 'lucide-react';
 
 export default function ProjectDetailsModal({ 
   isOpen, 
@@ -17,14 +17,28 @@ export default function ProjectDetailsModal({
   onCommentDelete,
   isFollowing,
   onFollowToggle,
-  users
+  users,
+  bookmarks = [],
+  onBookmarkToggle
 }) {
+  const [videoEnded, setVideoEnded] = useState(false);
+  const videoRef = useRef(null);
+
   if (!isOpen || !item) return null;
 
-  const { title, description, type, fileUrl, fileName, fileSize, date, tags, authorName, authorEmail } = item;
+  const { title, description, type, fileUrl, date, tags, authorName, authorEmail } = item;
   const likes = item.likes || [];
   const isLiked = currentUser ? likes.includes(currentUser.email) : false;
   const likeCount = likes.length;
+
+  const isBookmarked = bookmarks.includes(item.id);
+
+  const handleBookmarkClick = (e) => {
+    e.stopPropagation();
+    if (onBookmarkToggle) {
+      onBookmarkToggle(item.id);
+    }
+  };
 
   const handleLikeClick = (e) => {
     e.stopPropagation();
@@ -32,9 +46,6 @@ export default function ProjectDetailsModal({
       onLikeToggle(item.id);
     }
   };
-
-  const [videoEnded, setVideoEnded] = useState(false);
-  const videoRef = useRef(null);
 
   const handleVideoTimeUpdate = (e) => {
     const video = e.target;
@@ -182,6 +193,21 @@ export default function ProjectDetailsModal({
                   <span className={isLiked ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}>{likeCount}</span>
                 </button>
 
+                {currentUser && (
+                  <button
+                    onClick={handleBookmarkClick}
+                    className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-600 hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer group/bookmark mr-2"
+                    title={isBookmarked ? 'ยกเลิกการบันทึกผลงาน' : 'บันทึกผลงานนี้'}
+                  >
+                    <Bookmark
+                      size={14}
+                      className={`transition-all duration-200 active:scale-125 ${
+                        isBookmarked ? 'fill-blue-500 text-blue-500 scale-105' : 'text-slate-400 dark:text-slate-500 group-hover/bookmark:scale-105 group-hover/bookmark:text-blue-500'
+                      }`}
+                    />
+                  </button>
+                )}
+
                 <div className="flex items-center gap-1">
                   <Calendar size={13} />
                   <span>เผยแพร่: {date}</span>
@@ -281,9 +307,7 @@ export default function ProjectDetailsModal({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (window.confirm('ต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) {
-                                      if (onCommentDelete) onCommentDelete(item.id, comment.id);
-                                    }
+                                    if (onCommentDelete) onCommentDelete(item.id, comment.id);
                                   }}
                                   className="text-[10px] font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline cursor-pointer transition active:scale-95"
                                 >

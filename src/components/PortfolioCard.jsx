@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FileText, Image as ImageIcon, Video as VideoIcon, Edit3, Trash2, ArrowUpRight, Download, RotateCcw, AlertCircle, Heart } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video as VideoIcon, Edit3, Trash2, ArrowUpRight, Download, RotateCcw, AlertCircle, Heart, Bookmark } from 'lucide-react';
 
 export default function PortfolioCard({ 
   item, 
@@ -14,7 +14,9 @@ export default function PortfolioCard({
   activeTab,
   isAuthorSuspended,
   authorId,
-  onLikeToggle
+  onLikeToggle,
+  bookmarks = [],
+  onBookmarkToggle
 }) {
   const { title, description, type, fileUrl, fileName, fileSize, date, tags, authorName, authorEmail } = item;
   const [videoPreviewEnded, setVideoPreviewEnded] = useState(false);
@@ -24,6 +26,15 @@ export default function PortfolioCard({
   const likes = item.likes || [];
   const isLiked = currentUser ? likes.includes(currentUser.email) : false;
   const likeCount = likes.length;
+
+  const isBookmarked = bookmarks.includes(item.id);
+
+  const handleBookmarkClick = (e) => {
+    e.stopPropagation();
+    if (onBookmarkToggle) {
+      onBookmarkToggle(item.id);
+    }
+  };
 
   const handleLikeClick = (e) => {
     e.stopPropagation();
@@ -217,6 +228,21 @@ export default function PortfolioCard({
               />
               <span className={isLiked ? 'text-rose-600 dark:text-rose-500' : 'text-slate-500 dark:text-slate-400'}>{likeCount}</span>
             </button>
+
+            {currentUser && (
+              <button
+                onClick={handleBookmarkClick}
+                className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer group/bookmark"
+                title={isBookmarked ? 'ยกเลิกการบันทึกผลงาน' : 'บันทึกผลงานนี้'}
+              >
+                <Bookmark
+                  size={14}
+                  className={`transition-all duration-200 active:scale-125 ${
+                    isBookmarked ? 'fill-blue-500 text-blue-500 scale-105' : 'text-slate-400 dark:text-slate-500 group-hover/bookmark:scale-105 group-hover/bookmark:text-blue-500'
+                  }`}
+                />
+              </button>
+            )}
 
             {(canEdit || canDelete) ? (
               <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
