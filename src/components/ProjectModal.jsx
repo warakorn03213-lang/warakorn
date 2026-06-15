@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Upload, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, AlertCircle } from 'lucide-react';
 
 export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
   const [title, setTitle] = useState('');
@@ -130,9 +130,9 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
         onClick={onClose}
       />
 
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-lg w-full relative z-10 p-7 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
+      <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-lg w-full relative z-10 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
+        <div className="flex items-center justify-between p-6 sm:p-7 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {editingItem ? 'แก้ไขผลงาน' : 'เพิ่มผลงานชิ้นใหม่'}
           </h3>
@@ -144,176 +144,177 @@ export default function ProjectModal({ isOpen, onClose, onSave, editingItem }) {
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-[fadeIn_0.2s_ease-out]">
-            <AlertCircle size={14} className="shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto p-6 sm:p-7 space-y-5 flex-1">
+            {error && (
+              <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-[fadeIn_0.2s_ease-out]">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          
-          <div>
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">ชื่อผลงาน *</label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="ชื่องานของคุณ"
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-600 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">รายละเอียด</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="ข้อมูลเกี่ยวกับผลงานชิ้นนี้..."
-              rows={3}
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-600 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none"
-            />
-          </div>
-
-          {!editingItem && (
             <div>
-              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">ประเภทชิ้นงาน</label>
-              <div className="flex gap-3">
-                {[
-                  { id: 'image', label: 'รูปภาพ' },
-                  { id: 'video', label: 'วิดีโอ' },
-                ].map((t) => {
-                  const isSelected = type === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => {
-                        setType(t.id);
-                        setFileUrl('');
-                        setFileName('');
-                        setFileSize('');
-                      }}
-                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] cursor-pointer ${
-                        isSelected 
-                          ? 'border-slate-800 dark:border-slate-200 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' 
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">ชื่อผลงาน *</label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="ชื่องานของคุณ"
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-600 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+              />
             </div>
-          )}
 
-          {!editingItem ? (
-            <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
-              <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-                <button
-                  type="button"
-                  onClick={() => setUploadMode('upload')}
-                  className={`flex-1 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    uploadMode === 'upload' 
-                      ? 'bg-white dark:bg-slate-900 border-b border-slate-900 dark:border-slate-100 text-slate-900 dark:text-white' 
-                      : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  อัปโหลดไฟล์
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadMode('url')}
-                  className={`flex-1 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    uploadMode === 'url' 
-                      ? 'bg-white dark:bg-slate-900 border-b border-slate-900 dark:border-slate-100 text-slate-900 dark:text-white' 
-                      : 'text-slate-400 dark:text-slate-500'
-                  }`}
-                >
-                  ใส่ลิงก์ตรง
-                </button>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">รายละเอียด</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="ข้อมูลเกี่ยวกับผลงานชิ้นนี้..."
+                rows={3}
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-600 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none"
+              />
+            </div>
+
+            {!editingItem && (
+              <div>
+                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">ประเภทชิ้นงาน</label>
+                <div className="flex gap-3">
+                  {[
+                    { id: 'image', label: 'รูปภาพ' },
+                    { id: 'video', label: 'วิดีโอ' },
+                  ].map((t) => {
+                    const isSelected = type === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setType(t.id);
+                          setFileUrl('');
+                          setFileName('');
+                          setFileSize('');
+                        }}
+                        className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] cursor-pointer ${
+                          isSelected 
+                            ? 'border-slate-800 dark:border-slate-200 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' 
+                            : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
-              <div className="p-4 bg-white dark:bg-slate-900">
-                {uploadMode === 'upload' ? (
-                  <div className="text-center animate-[fadeIn_0.2s_ease-out]">
-                    <label className="flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl py-6 px-4 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-950/25 transition cursor-pointer">
-                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">เลือกไฟล์จากเครื่อง</span>
+            {!editingItem ? (
+              <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                <div className="flex border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('upload')}
+                    className={`flex-1 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      uploadMode === 'upload' 
+                        ? 'bg-white dark:bg-slate-900 border-b border-slate-900 dark:border-slate-100 text-slate-900 dark:text-white' 
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    อัปโหลดไฟล์
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('url')}
+                    className={`flex-1 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      uploadMode === 'url' 
+                        ? 'bg-white dark:bg-slate-900 border-b border-slate-900 dark:border-slate-100 text-slate-900 dark:text-white' 
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    ใส่ลิงก์ตรง
+                  </button>
+                </div>
+
+                <div className="p-4 bg-white dark:bg-slate-900">
+                  {uploadMode === 'upload' ? (
+                    <div className="text-center animate-[fadeIn_0.2s_ease-out]">
+                      <label className="flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl py-6 px-4 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-950/25 transition cursor-pointer">
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">เลือกไฟล์จากเครื่อง</span>
+                        <input
+                          type="file"
+                          onChange={handleFileChange}
+                          accept={
+                            type === 'image' ? 'image/*' :
+                            type === 'video' ? 'video/*' : '*/*'
+                          }
+                          className="hidden"
+                        />
+                      </label>
+                      {fileName && (
+                        <div className="mt-3 text-xs bg-slate-50 dark:bg-slate-950 p-2.5 border border-slate-100 dark:border-slate-900 rounded-xl flex items-center justify-between text-slate-500 dark:text-slate-400 animate-[fadeIn_0.2s_ease-out]">
+                          <span className="truncate max-w-[70%] font-semibold">{fileName}</span>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">{fileSize}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="animate-[fadeIn_0.2s_ease-out]">
                       <input
-                        type="file"
-                        onChange={handleFileChange}
-                        accept={
-                          type === 'image' ? 'image/*' :
-                          type === 'video' ? 'video/*' : '*/*'
-                        }
-                        className="hidden"
+                        type="url"
+                        value={fileUrl}
+                        onChange={(e) => {
+                          const targetUrl = e.target.value;
+                          setFileUrl(targetUrl);
+                          try {
+                            const parsed = new URL(targetUrl);
+                            const parts = parsed.pathname.split('/');
+                            setFileName(parts[parts.length - 1] || 'external-link');
+                          } catch {
+                            setFileName('external-link');
+                          }
+                          setFileSize('External URL');
+                        }}
+                        placeholder="https://example.com/file.jpg"
+                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                       />
-                    </label>
-                    {fileName && (
-                      <div className="mt-3 text-xs bg-slate-50 dark:bg-slate-950 p-2.5 border border-slate-100 dark:border-slate-900 rounded-xl flex items-center justify-between text-slate-500 dark:text-slate-400 animate-[fadeIn_0.2s_ease-out]">
-                        <span className="truncate max-w-[70%] font-semibold">{fileName}</span>
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">{fileSize}</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="animate-[fadeIn_0.2s_ease-out]">
-                    <input
-                      type="url"
-                      value={fileUrl}
-                      onChange={(e) => {
-                        const targetUrl = e.target.value;
-                        setFileUrl(targetUrl);
-                        try {
-                          const parsed = new URL(targetUrl);
-                          const parts = parsed.pathname.split('/');
-                          setFileName(parts[parts.length - 1] || 'external-link');
-                        } catch {
-                          setFileName('external-link');
-                        }
-                        setFileSize('External URL');
-                      }}
-                      placeholder="https://example.com/file.jpg"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
-                    />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 rounded-[22px] text-xs text-slate-500 dark:text-slate-400 space-y-3 animate-[fadeIn_0.2s_ease-out]">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ประเภทไฟล์:</span> 
+                  <span className="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-md capitalize">
+                    {type === 'image' ? 'รูปภาพ' : type === 'video' ? 'วิดีโอ' : 'เอกสาร/ไฟล์'}
+                  </span>
+                </div>
+                {fileName && (
+                  <div className="truncate font-medium flex items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 p-2.5 rounded-xl">
+                    <span className="truncate max-w-[70%] font-bold text-slate-700 dark:text-slate-300">{fileName}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-950 px-2 py-0.5 rounded-lg shrink-0">{fileSize}</span>
                   </div>
                 )}
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 rounded-[22px] text-xs text-slate-500 dark:text-slate-400 space-y-3 animate-[fadeIn_0.2s_ease-out]">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ประเภทไฟล์:</span> 
-                <span className="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-md capitalize">
-                  {type === 'image' ? 'รูปภาพ' : type === 'video' ? 'วิดีโอ' : 'เอกสาร/ไฟล์'}
-                </span>
-              </div>
-              {fileName && (
-                <div className="truncate font-medium flex items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 p-2.5 rounded-xl">
-                  <span className="truncate max-w-[70%] font-bold text-slate-700 dark:text-slate-300">{fileName}</span>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-950 px-2 py-0.5 rounded-lg shrink-0">{fileSize}</span>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal italic">
+                  * สำหรับชิ้นงานที่อัปโหลดไปแล้ว ระบบอนุญาตให้แก้ไขเฉพาะ ชื่อผลงาน รายละเอียด และแท็กเท่านั้น เพื่อความปลอดภัยของข้อมูลไฟล์ต้นฉบับ
                 </div>
-              )}
-              <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal italic">
-                * สำหรับชิ้นงานที่อัปโหลดไปแล้ว ระบบอนุญาตให้แก้ไขเฉพาะ ชื่อผลงาน รายละเอียด และแท็กเท่านั้น เพื่อความปลอดภัยของข้อมูลไฟล์ต้นฉบับ
               </div>
-            </div>
-          )}
+            )}
 
-          <div>
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-600 uppercase tracking-wider mb-2">แท็ก (ต้องขึ้นต้นด้วย # และไม่มีเว้นวรรคในตัวแท็ก)</label>
-            <input
-              type="text"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="เช่น #Design #React #UIUX"
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
-            />
+            <div>
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-600 uppercase tracking-wider mb-2">แท็ก (ต้องขึ้นต้นด้วย # และไม่มีเว้นวรรคในตัวแท็ก)</label>
+              <input
+                type="text"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                placeholder="เช่น #Design #React #UIUX"
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+              />
+            </div>
           </div>
 
-          <div className="flex gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-6 sm:p-7 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex gap-4 shrink-0">
             <button
               type="button"
               onClick={onClose}

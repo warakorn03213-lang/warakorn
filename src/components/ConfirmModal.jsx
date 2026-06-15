@@ -1,4 +1,3 @@
-import React from 'react';
 import { AlertTriangle, Trash2, HelpCircle, X } from 'lucide-react';
 
 export default function ConfirmModal({
@@ -55,7 +54,7 @@ export default function ConfirmModal({
       />
 
       {/* Modal Container */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 max-w-sm w-full relative z-10 p-6 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 max-w-sm w-full relative z-10 p-6 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
         
         {/* Close Button */}
         <button

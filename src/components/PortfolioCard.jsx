@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { FileText, Image as ImageIcon, Video as VideoIcon, Edit3, Trash2, ArrowUpRight, Download, RotateCcw, AlertCircle, Heart, Bookmark } from 'lucide-react';
 
 export default function PortfolioCard({ 
@@ -245,7 +245,7 @@ export default function PortfolioCard({
             )}
 
             {(canEdit || canDelete) ? (
-              <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex items-center gap-3 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                 {canEdit && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onEdit(item); }}

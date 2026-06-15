@@ -181,38 +181,21 @@ const initDatabase = async () => {
     await dbRun(commentsTable);
 
     // Create default Admin accounts if they don't exist
-    const adminExist = await dbGet("SELECT COUNT(*) as count FROM users WHERE email = 'admin@admin.com'");
-    const adminCount = adminExist ? parseInt(adminExist.count, 10) : 0;
-    if (adminCount === 0) {
-      const adminPasswordHash = bcrypt.hashSync('admin123', 10);
+    const customAdminExist = await dbGet("SELECT COUNT(*) as count FROM users WHERE email = 'warakorn03213@gmail.com'");
+    const customAdminCount = customAdminExist ? parseInt(customAdminExist.count, 10) : 0;
+    if (customAdminCount === 0) {
+      const customAdminPasswordHash = bcrypt.hashSync('warakorn11250', 10);
       await dbRun(`
         INSERT INTO users (email, password, name, userId, role, avatar)
         VALUES (
-          'admin@admin.com',
+          'warakorn03213@gmail.com',
           ?,
-          'แอดมินระดับสูง (Super Admin)',
+          'Warakorn (Super Admin)',
           'ADM01',
           'superadmin',
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&h=256&q=80'
-        )
-      `, [adminPasswordHash]);
-    }
-
-    const admin2Exist = await dbGet("SELECT COUNT(*) as count FROM users WHERE email = 'admin2@admin.com'");
-    const admin2Count = admin2Exist ? parseInt(admin2Exist.count, 10) : 0;
-    if (admin2Count === 0) {
-      const admin2PasswordHash = bcrypt.hashSync('admin123', 10);
-      await dbRun(`
-        INSERT INTO users (email, password, name, userId, role, avatar)
-        VALUES (
-          'admin2@admin.com',
-          ?,
-          'แอดมินทั่วไป (Admin)',
-          'ADM02',
-          'admin',
           ''
         )
-      `, [admin2PasswordHash]);
+      `, [customAdminPasswordHash]);
     }
   } catch (err) {
     console.error('Error initializing database tables:', err);

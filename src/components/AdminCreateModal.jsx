@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Shield, Mail, Lock, User as UserIcon } from 'lucide-react';
 
 export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
@@ -75,14 +75,14 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
         onClick={onClose}
       />
 
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-md w-full relative z-10 p-7 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
+      <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-md w-full relative z-10 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         
-        <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between p-6 sm:p-7 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl">
               <Shield size={18} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">เพิ่มผู้ดูแลระบบใหม่</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">เพิ่มผู้ดูแลระบบใหม่</h3>
           </div>
           <button 
             onClick={onClose}
@@ -92,62 +92,64 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          {error && (
-            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-xs font-semibold text-rose-600 dark:text-rose-400 animate-scale-in">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto p-6 sm:p-7 space-y-4 flex-1">
+            {error && (
+              <div className="p-3.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-xs font-semibold text-rose-600 dark:text-rose-400 animate-scale-in">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ชื่อแสดงผล / ชื่อ-นามสกุล</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <UserIcon size={16} />
-              </span>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="เช่น แอดมินสมยศ"
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-400 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ชื่อแสดงผล / ชื่อ-นามสกุล</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <UserIcon size={16} />
+                </span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="เช่น แอดมินสมยศ"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-400 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">อีเมลล็อกอิน</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Mail size={16} />
+                </span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="เช่น admin3@admin.com"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-500 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">รหัสผ่าน</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Lock size={16} />
+                </span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="อย่างน้อย 6 ตัวอักษร"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-500 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">อีเมลล็อกอิน</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Mail size={16} />
-              </span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="เช่น admin3@admin.com"
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-500 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">รหัสผ่าน</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Lock size={16} />
-              </span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="อย่างน้อย 6 ตัวอักษร"
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 focus:border-slate-500 dark:focus:border-slate-700 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
+          <div className="p-6 sm:p-7 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end gap-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -165,7 +167,6 @@ export default function AdminCreateModal({ isOpen, onClose, onSave, users }) {
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );

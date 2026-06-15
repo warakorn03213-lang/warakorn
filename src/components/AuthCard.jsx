@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 
-export default function AuthCard({ onLogin, onRegister, onCancel }) {
+export default function AuthCard({ onLogin, onRegister }) {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

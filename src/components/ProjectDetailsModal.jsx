@@ -82,7 +82,7 @@ export default function ProjectDetailsModal({
         onClick={onClose}
       />
 
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-2xl w-full relative z-10 shadow-2xl shadow-slate-200/50 dark:shadow-black/35 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300 flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-[32px] overflow-hidden border border-slate-100 dark:border-slate-800 max-w-2xl w-full relative z-10 shadow-2xl shadow-slate-200/50 dark:shadow-black/35 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300 flex flex-col max-h-[95vh] sm:max-h-[90vh]">
         
         <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{type} details</span>

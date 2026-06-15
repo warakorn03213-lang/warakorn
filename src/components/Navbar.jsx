@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Compass, Briefcase, Eye, EyeOff, LogOut, Settings, User, Sun, Moon, LogIn, Search } from 'lucide-react';
 
 export default function Navbar({ 
@@ -153,14 +153,16 @@ export default function Navbar({
                 {activeTab === 'workspace' && (
                   <button
                     onClick={() => setIsPublicView(!isPublicView)}
-                    className={`flex items-center gap-2 text-xs md:text-sm font-semibold px-4 py-2 rounded-full transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2 text-xs md:text-sm font-semibold px-3 py-2 sm:px-4 sm:py-2 rounded-full transition-all duration-200 cursor-pointer ${
                       isPublicView
                         ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70'
                         : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
+                    title={isPublicView ? 'แก้ไขผลงาน' : 'ดูหน้าเว็บจริง'}
                   >
                     {isPublicView ? <EyeOff size={15} /> : <Eye size={15} />}
-                    <span>{isPublicView ? 'แก้ไขผลงาน' : 'ดูหน้าเว็บจริง'}</span>
+                    <span className="hidden sm:inline">{isPublicView ? 'แก้ไขผลงาน' : 'ดูหน้าเว็บจริง'}</span>
+                    <span className="sm:hidden">{isPublicView ? 'แก้ไข' : 'ดูเว็บ'}</span>
                   </button>
                 )}
 
@@ -287,10 +289,11 @@ export default function Navbar({
 
                 <button
                   onClick={onLoginClick}
-                  className="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 flex items-center gap-1.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer"
+                  className="text-xs md:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 flex items-center gap-1.5 px-3 py-2 sm:px-4 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl transition cursor-pointer"
                 >
                   <LogIn size={15} />
-                  <span>สำหรับผู้ดูแล (Login)</span>
+                  <span className="hidden sm:inline">สำหรับผู้ดูแล (Login)</span>
+                  <span className="sm:hidden">เข้าสู่ระบบ</span>
                 </button>
               </div>
             )}

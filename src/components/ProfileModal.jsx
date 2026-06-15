@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Camera, AlertCircle, FileText, Globe, ZoomIn, ZoomOut, Move } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Camera, AlertCircle, FileText, Globe, ZoomIn, ZoomOut } from 'lucide-react';
 
 export default function ProfileModal({ isOpen, onClose, onSave, currentUser, onDeleteAccount }) {
   const [name, setName] = useState('');
@@ -175,9 +175,9 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser, onD
         onClick={onClose}
       />
 
-      <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 max-w-sm w-full relative z-10 p-7 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300">
+      <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-[32px] border border-slate-100 dark:border-slate-800 max-w-sm w-full relative z-10 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 opacity-0 scale-95 animate-scale-in text-slate-700 dark:text-slate-300 flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
         
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
+        <div className="flex items-center justify-between p-6 sm:p-7 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">แก้ไขโปรไฟล์</h3>
           <button 
             onClick={onClose}
@@ -187,79 +187,97 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser, onD
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-[fadeIn_0.2s_ease-out]">
-            <AlertCircle size={14} className="shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-y-auto p-6 sm:p-7 space-y-6 flex-1 w-full flex flex-col items-center">
+            {error && (
+              <div className="w-full mb-4 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100/40 rounded-xl flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-[fadeIn_0.2s_ease-out] shrink-0">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
-          
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative select-none">
-              {avatar ? (
-                <img src={avatar} alt={name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-bold text-slate-400 dark:text-slate-600">
-                  {name ? name[0].toUpperCase() : 'U'}
-                </span>
-              )}
+            <div className="relative group shrink-0">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative select-none">
+                {avatar ? (
+                  <img src={avatar} alt={name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-bold text-slate-400 dark:text-slate-600">
+                    {name ? name[0].toUpperCase() : 'U'}
+                  </span>
+                )}
+              </div>
+              
+              <label className="absolute inset-0 bg-black/45 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer text-[10px] font-bold">
+                <Camera size={18} className="mb-1" />
+                <span>เปลี่ยนรูป</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAvatarChange} 
+                  className="hidden" 
+                />
+              </label>
             </div>
-            
-            <label className="absolute inset-0 bg-black/45 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer text-[10px] font-bold">
-              <Camera size={18} className="mb-1" />
-              <span>เปลี่ยนรูป</span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleAvatarChange} 
-                className="hidden" 
+
+            <div className="w-full">
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left">ชื่อผู้แสดงตัวตน</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="เช่น ชื่อของคุณ"
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
               />
-            </label>
+            </div>
+
+            <div className="w-full">
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left flex items-center gap-1.5">
+                <FileText size={12} />
+                <span>ประวัติย่อ (Bio)</span>
+              </label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="แนะนำตัวเองสั้นๆ เกี่ยวกับตัวคุณและผลงานของคุณ"
+                rows={3}
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none"
+              />
+            </div>
+
+            <div className="w-full">
+              <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left flex items-center gap-1.5">
+                <Globe size={12} />
+                <span>ลิงก์สำหรับติดต่อ (Website / Social Link)</span>
+              </label>
+              <input
+                type="text"
+                value={socialLink}
+                onChange={(e) => setSocialLink(e.target.value)}
+                placeholder="เช่น github.com/username หรือ fb.com/name"
+                className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+              />
+            </div>
+
+            {currentUser && currentUser.role !== 'superadmin' && (
+              <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-center shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    if (onDeleteAccount) {
+                      onDeleteAccount(currentUser.email);
+                    }
+                  }}
+                  className="text-xs font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline cursor-pointer active:scale-95 transition-all"
+                >
+                  ลบบัญชีผู้ใช้ของคุณอย่างถาวร
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="w-full">
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left">ชื่อผู้แสดงตัวตน</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="เช่น ชื่อของคุณ"
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
-            />
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left flex items-center gap-1.5">
-              <FileText size={12} />
-              <span>ประวัติย่อ (Bio)</span>
-            </label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="แนะนำตัวเองสั้นๆ เกี่ยวกับตัวคุณและผลงานของคุณ"
-              rows={3}
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none"
-            />
-          </div>
-
-          <div className="w-full">
-            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 text-left flex items-center gap-1.5">
-              <Globe size={12} />
-              <span>ลิงก์สำหรับติดต่อ (Website / Social Link)</span>
-            </label>
-            <input
-              type="text"
-              value={socialLink}
-              onChange={(e) => setSocialLink(e.target.value)}
-              placeholder="เช่น github.com/username หรือ fb.com/name"
-              className="w-full px-4 py-2.5 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-slate-400 dark:focus:border-slate-600 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
-            />
-          </div>
-
-          <div className="flex gap-3 w-full pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-6 sm:p-7 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex gap-3 w-full shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -276,23 +294,6 @@ export default function ProfileModal({ isOpen, onClose, onSave, currentUser, onD
               {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
-
-          {currentUser && currentUser.role !== 'superadmin' && (
-            <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  if (onDeleteAccount) {
-                    onDeleteAccount(currentUser.email);
-                  }
-                }}
-                className="text-xs font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline cursor-pointer active:scale-95 transition-all"
-              >
-                ลบบัญชีผู้ใช้ของคุณอย่างถาวร
-              </button>
-            </div>
-          )}
 
         </form>
       </div>

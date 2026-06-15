@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import PortfolioCard from './components/PortfolioCard';
 import ProjectModal from './components/ProjectModal';
@@ -166,6 +166,7 @@ export default function App() {
     };
 
     fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Hash routing ──────────────────────────────
@@ -395,6 +396,7 @@ export default function App() {
             users={users}
             portfolio={portfolio}
             searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
             adminSubTab={adminSubTab}
             setAdminSubTab={setAdminSubTab}
             isUserSuspended={isUserSuspended}
@@ -409,20 +411,36 @@ export default function App() {
         ) : (
           <>
             {activeTab === 'workspace' && user ? (
-              <WorkspaceHeader
-                user={user}
-                isPublicView={isPublicView}
-                setIsPublicView={setIsPublicView}
-                setIsProfileModalOpen={setIsProfileModalOpen}
-                setIsModalOpen={setIsModalOpen}
-                setEditingItem={setEditingItem}
-                isUserSuspended={isUserSuspended}
-                portfolio={portfolio}
-                addToast={addToast}
-                workspaceSubTab={workspaceSubTab}
-                setWorkspaceSubTab={setWorkspaceSubTab}
-                bookmarks={bookmarks}
-              />
+              <>
+                <WorkspaceHeader
+                  user={user}
+                  isPublicView={isPublicView}
+                  setIsPublicView={setIsPublicView}
+                  setIsProfileModalOpen={setIsProfileModalOpen}
+                  setIsModalOpen={setIsModalOpen}
+                  setEditingItem={setEditingItem}
+                  isUserSuspended={isUserSuspended}
+                  portfolio={portfolio}
+                  addToast={addToast}
+                  workspaceSubTab={workspaceSubTab}
+                  setWorkspaceSubTab={setWorkspaceSubTab}
+                  bookmarks={bookmarks}
+                />
+                {!isPublicView && (
+                  <div className="relative w-full block md:hidden mb-6 animate-scale-in">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Search size={16} />
+                    </span>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="ค้นหาผลงานของคุณ..."
+                      className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl border border-slate-300 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/15 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 shadow-sm"
+                    />
+                  </div>
+                )}
+              </>
             ) : activeTab === 'explore' && selectedAuthor ? (
               <CreatorHeader
                 selectedAuthor={selectedAuthor}
@@ -606,7 +624,7 @@ export default function App() {
 // ─── Admin Panel (extracted to reduce App size) ──────────────────
 
 function AdminPanel({
-  user, users, portfolio, searchTerm, adminSubTab, setAdminSubTab,
+  user, users, portfolio, searchTerm, setSearchTerm, adminSubTab, setAdminSubTab,
   isUserSuspended, handleToggleSuspendUser, handleDeleteUser,
   handleToggleSuspendProject, handleDeleteItem, setIsAdminModalOpen,
 }) {
@@ -621,6 +639,24 @@ function AdminPanel({
             ? 'สถานะ: Super Admin | จัดการบัญชีผู้ใช้, ระงับ/ปลดระงับโพสต์, ลบโพสต์และลบบัญชี/แอดมินได้ทั้งหมด'
             : 'สถานะ: Admin | จัดการและตรวจสอบโพสต์ผลงานเท่านั้น (ระงับ/ปลดระงับโพสต์, ลบโพสต์)'}
         </p>
+      </div>
+
+      {/* Mobile Search Input */}
+      <div className="relative w-full block md:hidden mb-6">
+        <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <Search size={16} />
+        </span>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder={
+            adminSubTab === 'posts'
+              ? "ค้นหาชื่อผลงาน, ผู้เขียน หรือแท็ก..."
+              : "ค้นหาด้วยชื่อหรืออีเมล..."
+          }
+          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl border border-slate-300 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/15 outline-none placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 shadow-sm"
+        />
       </div>
 
       {user.role === 'superadmin' && (
@@ -703,16 +739,16 @@ function CreatorsTable({ users, portfolio, searchTerm, isUserSuspended, handleTo
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-slate-500 dark:text-slate-400">{u.email}</td>
-                    <td className="py-4 px-6 text-center font-bold text-slate-800 dark:text-slate-200">{worksCount} ผลงาน</td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 text-slate-500 dark:text-slate-400 whitespace-nowrap">{u.email}</td>
+                    <td className="py-4 px-6 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">{worksCount} ผลงาน</td>
+                    <td className="py-4 px-6 whitespace-nowrap">
                       {suspended ? (
                         <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-500 border border-rose-100 dark:border-rose-900/40">ระงับการโพสต์</span>
                       ) : (
                         <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500 border border-emerald-100 dark:border-emerald-900/40">ปกติ</span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-right space-x-2">
+                    <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
                       <button onClick={() => handleToggleSuspendUser(u.email)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer ${suspended ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-950/45 text-rose-600 dark:text-rose-400 border border-rose-100/40 dark:border-rose-900/40'}`}>
                         {suspended ? 'ปลดระงับ' : 'ระงับการโพสต์'}
                       </button>
@@ -785,8 +821,8 @@ function AdminsTable({ users, user, searchTerm, handleDeleteUser, setIsAdminModa
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400">{u.email}</td>
-                  <td className="py-4 px-6 text-right">
+                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400 whitespace-nowrap">{u.email}</td>
+                  <td className="py-4 px-6 text-right whitespace-nowrap">
                     <button onClick={() => handleDeleteUser(u.email)} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer shadow-xs">
                       ลบแอดมิน
                     </button>
@@ -841,7 +877,7 @@ function PostsTable({ portfolio, searchTerm, handleToggleSuspendProject, handleD
           <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
             {filtered.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-950/10 transition">
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     {item.type === 'image' && item.fileUrl ? (
                       <img src={item.fileUrl} alt="" className="w-10 h-7 rounded-md object-cover border border-slate-200 dark:border-slate-800 shrink-0" />
@@ -853,20 +889,20 @@ function PostsTable({ portfolio, searchTerm, handleToggleSuspendProject, handleD
                     <span onClick={() => { window.location.hash = `#project/${item.id}`; }} className="font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 cursor-pointer line-clamp-1 max-w-[200px]">{item.title}</span>
                   </div>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 whitespace-nowrap">
                   <div className="text-slate-800 dark:text-slate-200 font-medium">{item.authorName}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">{item.authorEmail}</div>
                 </td>
-                <td className="py-4 px-6 text-slate-500 dark:text-slate-400 capitalize">{item.type}</td>
-                <td className="py-4 px-6 text-slate-500 dark:text-slate-400">{item.date}</td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6 text-slate-500 dark:text-slate-400 capitalize whitespace-nowrap">{item.type}</td>
+                <td className="py-4 px-6 text-slate-500 dark:text-slate-400 whitespace-nowrap">{item.date}</td>
+                <td className="py-4 px-6 whitespace-nowrap">
                   {item.isSuspended ? (
                     <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-500 border border-rose-100 dark:border-rose-900/40">ถูกระงับ</span>
                   ) : (
                     <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500 border border-emerald-100 dark:border-emerald-900/40">เผยแพร่ปกติ</span>
                   )}
                 </td>
-                <td className="py-4 px-6 text-right space-x-2 shrink-0">
+                <td className="py-4 px-6 text-right space-x-2 shrink-0 whitespace-nowrap">
                   <button onClick={() => handleToggleSuspendProject(item.id)} className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer ${item.isSuspended ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-950/45 text-rose-600 dark:text-rose-400 border border-rose-100/40 dark:border-rose-900/40'}`}>
                     {item.isSuspended ? 'ปลดระงับ' : 'ระงับโพสต์'}
                   </button>
@@ -924,7 +960,7 @@ function WorkspaceHeader({
   bookmarks = [],
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[32px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 md:p-8 mb-10 shadow-xs animate-scale-in">
+    <div className="relative overflow-hidden sm:rounded-[32px] rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 sm:p-6 md:p-8 mb-10 shadow-xs animate-scale-in">
       <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="relative group shrink-0">
@@ -1040,7 +1076,7 @@ function WorkspaceHeader({
 function CreatorHeader({ selectedAuthor, getSelectedAuthorName, getAuthorAvatar, getUserById, getAuthorRoleLabel, getAuthorByEmail, portfolio, user, handleToggleFollow }) {
   const authorData = getAuthorByEmail(selectedAuthor);
   return (
-    <div className="relative overflow-hidden rounded-[32px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 md:p-8 mb-10 shadow-xs animate-scale-in">
+    <div className="relative overflow-hidden sm:rounded-[32px] rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 sm:p-6 md:p-8 mb-10 shadow-xs animate-scale-in">
       <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shadow-md shrink-0 flex items-center justify-center text-3xl font-extrabold text-slate-400">
@@ -1123,7 +1159,7 @@ function ExploreControls({
         <div className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-400">
           พบ <span className="text-blue-600 dark:text-blue-400 font-extrabold">{filteredPortfolio.length}</span> ผลงานเผยแพร่
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {user && (
             <button
               onClick={() => setShowFollowingOnly(!showFollowingOnly)}
