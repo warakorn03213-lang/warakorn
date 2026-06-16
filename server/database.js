@@ -18,11 +18,15 @@ if (isPg) {
     }
   });
 } else {
-  const sqlite3 = require('sqlite3').verbose();
-  const path = require('path');
-  const dbPath = path.join(__dirname, 'database.sqlite');
-  sqliteDb = new sqlite3.Database(dbPath);
-  sqliteDb.run('PRAGMA foreign_keys = ON');
+  try {
+    // Dynamic require prevents Vercel's bundler from tracing native sqlite3 module
+    const sqlite3 = eval('require')('sqlite3').verbose();
+    const dbPath = path.join(__dirname, 'database.sqlite');
+    sqliteDb = new sqlite3.Database(dbPath);
+    sqliteDb.run('PRAGMA foreign_keys = ON');
+  } catch (err) {
+    console.error('SQLite3 is not available in this environment:', err.message);
+  }
 }
 
 // Convert SQLite query placeholders (?) to PostgreSQL ($1, $2...)
