@@ -49,7 +49,9 @@ export async function createAdmin(newAdminData) {
 // ─── Users ─────────────────────────────────────────
 
 export async function fetchUsers() {
-  const response = await fetch('/api/users');
+  const response = await fetch('/api/users', {
+    headers: getAuthHeaders(),
+  });
   return handleResponse(response);
 }
 
