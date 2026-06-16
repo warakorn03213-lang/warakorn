@@ -17,6 +17,7 @@ const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || 'bluefolio';
 
 const app = express();
 const PORT = 5000;
+app.set('trust proxy', 1);
 
 // Security Item 4: JWT_SECRET environment check
 const JWT_SECRET_ENV = process.env.JWT_SECRET;
