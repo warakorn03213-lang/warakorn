@@ -3,13 +3,19 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-const isPg = !!process.env.DATABASE_URL;
+const sanitizeEnv = (val) => {
+  if (!val) return val;
+  return val.replace(/^["']|["']$/g, '').trim();
+};
+
+const rawDbUrl = process.env.DATABASE_URL;
+const isPg = !!rawDbUrl;
 let pool = null;
 let sqliteDb = null;
 
 if (isPg) {
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: sanitizeEnv(rawDbUrl),
     max: 4,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 15000,

@@ -9,18 +9,26 @@ const rateLimit = require('express-rate-limit');
 const { dbQuery, dbGet, dbRun, isPg, dbInitPromise } = require('./database');
 const { createClient } = require('@supabase/supabase-js');
 
+const sanitizeEnv = (val) => {
+  if (!val) return val;
+  return val.replace(/^["']|["']$/g, '').trim();
+};
+
 let supabase = null;
-if (isPg && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabaseUrl = sanitizeEnv(process.env.SUPABASE_URL);
+const supabaseKey = sanitizeEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+if (isPg && supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
 }
-const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || 'bluefolio';
+const BUCKET_NAME = sanitizeEnv(process.env.SUPABASE_STORAGE_BUCKET) || 'bluefolio';
 
 const app = express();
 const PORT = 5000;
 app.set('trust proxy', 1);
 
 // Security Item 4: JWT_SECRET environment check
-const JWT_SECRET_ENV = process.env.JWT_SECRET;
+const JWT_SECRET_ENV = sanitizeEnv(process.env.JWT_SECRET);
 if (!JWT_SECRET_ENV) {
   if (process.env.NODE_ENV === 'production') {
     console.error('CRITICAL ERROR: JWT_SECRET environment variable is NOT set in production!');
