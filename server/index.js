@@ -551,7 +551,8 @@ app.post('/api/projects', authenticateToken, uploadProject.single('mediaFile'), 
 
     res.json({ success: true, id: projectId });
   } catch (err) {
-    res.status(500).json({ error: 'ระบบขัดข้อง' });
+    console.error('Error creating project:', err);
+    res.status(500).json({ error: 'ระบบขัดข้อง: ' + err.message });
   }
 });
 
