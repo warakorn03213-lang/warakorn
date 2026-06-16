@@ -80,13 +80,59 @@ app.get('/api/health', async (req, res) => {
   try {
     await dbInitPromise;
     const userCount = await dbGet('SELECT COUNT(*) as count FROM users');
+    
+    // Diagnostic info for environment variables
+    const getMaskedEnv = (val) => {
+      if (!val) return 'not_set';
+      const clean = sanitizeEnv(val);
+      if (clean.length <= 15) return `set (len: ${clean.length})`;
+      return `${clean.substring(0, 10)}...[len: ${clean.length}]...${clean.substring(clean.length - 10)}`;
+    };
+
+    const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const rawUrl = process.env.SUPABASE_URL || '';
+    
+    let storageTest = 'skipped';
+    let storageError = null;
+    
+    if (isPg && supabase) {
+      try {
+        const testFileName = `health-test-${Date.now()}.txt`;
+        const { data, error } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(testFileName, Buffer.from('health test'), {
+            contentType: 'text/plain',
+            upsert: true
+          });
+          
+        if (error) {
+          storageTest = 'fail';
+          storageError = error.message || error;
+        } else {
+          storageTest = 'ok';
+          await supabase.storage.from(BUCKET_NAME).remove([testFileName]);
+        }
+      } catch (e) {
+        storageTest = 'error';
+        storageError = e.message;
+      }
+    }
+
     res.json({
       status: 'ok',
       database: isPg ? 'postgresql' : 'sqlite',
       users: userCount ? parseInt(userCount.count, 10) : 0,
-      hasDbUrl: !!process.env.DATABASE_URL,
-      hasSupabaseUrl: !!process.env.SUPABASE_URL,
-      hasJwtSecret: !!process.env.JWT_SECRET
+      envDiagnostics: {
+        rawSupabaseUrl: rawUrl.length > 0 ? `${rawUrl.substring(0, 15)}... (len: ${rawUrl.length})` : 'empty',
+        sanitizedSupabaseUrl: supabaseUrl ? `${supabaseUrl.substring(0, 15)}... (len: ${supabaseUrl.length})` : 'empty',
+        rawSupabaseKey: getMaskedEnv(rawKey),
+        sanitizedSupabaseKey: getMaskedEnv(supabaseKey)
+      },
+      supabaseStorage: {
+        bucket: BUCKET_NAME,
+        status: storageTest,
+        error: storageError
+      }
     });
   } catch (err) {
     res.status(500).json({ status: 'error', error: err.message });
