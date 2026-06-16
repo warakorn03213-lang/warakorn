@@ -13,6 +13,7 @@ let supabase = null;
 if (isPg && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
   supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
+const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || 'bluefolio';
 
 const app = express();
 const PORT = 5000;
@@ -146,7 +147,7 @@ const uploadToCloudOrLocal = async (file, fallbackFilename) => {
     const fileExt = path.extname(file.originalname);
     const fileNameKey = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
     const { data, error } = await supabase.storage
-      .from('portfolio-uploads')
+      .from(BUCKET_NAME)
       .upload(fileNameKey, file.buffer, {
         contentType: file.mimetype,
         cacheControl: '3600',
@@ -159,7 +160,7 @@ const uploadToCloudOrLocal = async (file, fallbackFilename) => {
     }
     
     const { data: publicUrlData } = supabase.storage
-      .from('portfolio-uploads')
+      .from(BUCKET_NAME)
       .getPublicUrl(fileNameKey);
       
     return publicUrlData.publicUrl;
@@ -172,16 +173,24 @@ const deleteUploadedFile = async (fileUrl) => {
   if (!fileUrl) return;
   try {
     if (isPg && supabase && fileUrl.includes('supabase.co')) {
-      const parts = fileUrl.split('portfolio-uploads/');
-      if (parts.length > 1) {
-        const filenameKey = parts[1];
+      let filenameKey = null;
+      let usedBucketName = BUCKET_NAME;
+      
+      if (fileUrl.includes('portfolio-uploads/')) {
+        filenameKey = fileUrl.split('portfolio-uploads/')[1];
+        usedBucketName = 'portfolio-uploads';
+      } else if (fileUrl.includes(`${BUCKET_NAME}/`)) {
+        filenameKey = fileUrl.split(`${BUCKET_NAME}/`)[1];
+      }
+      
+      if (filenameKey) {
         const { error } = await supabase.storage
-          .from('portfolio-uploads')
+          .from(usedBucketName)
           .remove([filenameKey]);
         if (error) {
           console.error('Failed to delete file from Supabase storage:', error);
         } else {
-          console.log(`Deleted file from Supabase storage: ${filenameKey}`);
+          console.log(`Deleted file from Supabase storage: ${filenameKey} from bucket ${usedBucketName}`);
         }
       }
     } else if (fileUrl.startsWith('/uploads/')) {

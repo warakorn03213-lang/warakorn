@@ -10,6 +10,9 @@ let sqliteDb = null;
 if (isPg) {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    max: 4,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
     ssl: {
       rejectUnauthorized: false
     }
