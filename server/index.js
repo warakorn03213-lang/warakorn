@@ -66,14 +66,38 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Health check endpoint (before rate limiters)
+app.get('/api/health', async (req, res) => {
+  try {
+    await dbInitPromise;
+    const userCount = await dbGet('SELECT COUNT(*) as count FROM users');
+    res.json({
+      status: 'ok',
+      database: isPg ? 'postgresql' : 'sqlite',
+      users: userCount ? parseInt(userCount.count, 10) : 0,
+      hasDbUrl: !!process.env.DATABASE_URL,
+      hasSupabaseUrl: !!process.env.SUPABASE_URL,
+      hasJwtSecret: !!process.env.JWT_SECRET
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
 // Apply Rate Limiters
 app.use('/api/', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+let uploadsDir = path.join(__dirname, 'uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  // Vercel serverless has read-only filesystem outside /tmp
+  uploadsDir = path.join('/tmp', 'uploads');
+  try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (e) { /* ignore */ }
 }
 
 const storage = multer.diskStorage({
